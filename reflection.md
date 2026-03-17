@@ -31,23 +31,31 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 ## 3. Debugging and testing your fixes
 
 - How did you decide whether a bug was really fixed?
+I asked Claude to write a test for it inside test_game_logic.py, then I tested the function myself within the streamlit app.
 - Describe at least one test you ran (manual or using pytest)  
   and what it showed you about your code.
+I had Claude write a test that tested whether pressing the "New Game" button actually worked and reset our score, attempts, and used a new secret number. I ran it, it passed. To make sure, I ran the streamlit app and tested the button and it worked. This told me that the fix we made on this function worked.
 - Did AI help you design or understand any tests? How?
+Yes, it helped me both design and understand each test, it helped me plan each test's inputs, expected outputs, as well as how we are able to test functions like a button working properly.
 
 ---
 
 ## 4. What did you learn about Streamlit and state?
 
 - In your own words, explain why the secret number kept changing in the original app.
+The line "secret = random.randint(low,high) was ran every time the user interacted with the app, whether it be a button, typing in a text box, or selecting from a dropdown.This line changes the secret number to a random new one. This change was silent and so the hint the user got would be inaccurate.
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+If something needs to be persistent across interactions for example the score and more importantly the secret number in this case, it goes in as a session state. In streamlit, every interaction makes your app rerun from line 1, called a rerun. We can fix this using session state for the variables we need to be persistent.
 - What change did you make that finally gave the game a stable secret number?
-
+The fix was to wrap it inside this if statement: "if "secret" not in st.session_state". The if check makes it so the secret is only generated once and every rerun just reuses the same value.
 ---
 
 ## 5. Looking ahead: your developer habits
 
 - What is one habit or strategy from this project that you want to reuse in future labs or projects?
   - This could be a testing habit, a prompting strategy, or a way you used Git.
+I want to use test cases in the future, where I will ask Claude to help me build a useful test case in a separate tests.py just like test_game_logic.py. I will then use these tests for every bug I encountered and made changes to fix.
 - What is one thing you would do differently next time you work with AI on a coding task?
+I think I could work on debugging code alongside Claude instead of searching for bugs and wasting time writing insie CLAUDE.md very rudementary bugs that it could spot itself. This way, I can focus on more hidden bugs that lay layers deep into the app.
 - In one or two sentences, describe how this project changed the way you think about AI generated code.
+This project has taught me about test cases and how we can use AI to help understand, make sure functions we have debugged have been successfully debugged, to make sure that our AI generated code works. It's taught me that although AI is capable, it makes mistakes in situations where human interaction is what makes a function work.

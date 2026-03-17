@@ -1,72 +1,7 @@
 import random
 import streamlit as st
-
-def get_range_for_difficulty(difficulty: str):
-    if difficulty == "Easy":
-        return 1, 20
-    if difficulty == "Normal":
-        return 1, 50
-    if difficulty == "Hard":
-        return 1, 100
-    return 1, 100
-
-
-def parse_guess(raw: str):
-    if raw is None:
-        return False, None, "Enter a guess."
-
-    if raw == "":
-        return False, None, "Enter a guess."
-
-    try:
-        if "." in raw:
-            value = int(float(raw))
-        else:
-            value = int(raw)
-    except Exception:
-        return False, None, "That is not a number."
-
-    return True, value, None
-
-
-def check_guess(guess, secret):
-    if guess == secret:
-        return "Win", "🎉 Correct!"
-
-    try:
-        if guess > secret:
-            return "Too High", "📉 Go LOWER!"
-        else:
-            return "Too Low", "📈 Go HIGHER!"
-    except TypeError:
-        g = str(guess)
-        if g == secret:
-            return "Win", "🎉 Correct!"
-        if g > secret:
-            return "Too High", "📈 Go HIGHER!"
-        return "Too Low", "📉 Go LOWER!"
-
-
-def update_score(current_score: int, outcome: str, attempt_number: int):
-    if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
-        if points < 10:
-            points = 10
-        return current_score + points
-
-    if outcome == "Too High":
-        current_score -= 5
-        if current_score <= 0:
-            current_score = 0
-        return current_score
-
-    if outcome == "Too Low":
-        current_score -= 5
-        if current_score <= 0:
-            current_score = 0
-        return current_score
-
-    return current_score
+from logic_utils import get_range_for_difficulty, parse_guess, check_guess, update_score
+# FIX: moved get_range_for_difficulty, parse_guess, check_guess, and update_score to logic_utils.py from logic_utils.py
 
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
@@ -96,8 +31,18 @@ st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
+if st.session_state.get("difficulty") != difficulty:
+    st.session_state.difficulty = difficulty
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.attempts = 0
+    st.session_state.score = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
+    # FIX: when difficulty changes, reset the game so the secret and attempt limit match the new difficulty
+
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 1
+    st.session_state.attempts = 0 # The game starts with the number of attemps being 1, giving the user 1 less attempt than we want.
+    # FIX: changed starting attempt count from 1 to 0 as it should be.
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -111,7 +56,8 @@ if "history" not in st.session_state:
 st.subheader("Make a guess")
 
 st.info(
-    f"Guess a number between 1 and 100. "
+    f"Guess a number between {low} and {high}. " # This is hardcoded and will not change based on difficulty level chosen.
+    # FIX: replaced hardcoded "1 and 100" with {low} and {high} so the text is based on the actual difficulty range
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
@@ -135,11 +81,17 @@ with col2:
 with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
-if new_game:
+if new_game: # New game button does not work.
+    st.session_state.status = "playing"
     st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100)
+    st.session_state.score = 0
+    st.session_state.history = []
+    st.session_state.secret = random.randint(low, high) # The secret number is hardcoded to be from 1 to 100, and not based on the difficulty the user selects.
+    # FIX: replaced hardcoded randint(1, 100) with randint(low, high) so new games respect the selected difficulty range
+    # FIX: added score and history reset so each new game starts fresh
     st.success("New game started.")
     st.rerun()
+    # FIX: added st.session_state.status = "playing" so the game-over block is cleared when a new game starts
 
 if st.session_state.status != "playing":
     if st.session_state.status == "won":
